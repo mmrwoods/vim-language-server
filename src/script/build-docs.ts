@@ -26,7 +26,7 @@ interface IConfig {
 const EVAL_PATH = "/doc/eval.txt";
 const OPTIONS_PATH = "/doc/options.txt";
 const INDEX_PATH = "/doc/index.txt";
-const API_PATH = "/doc/api.txt";
+// const API_PATH = "/doc/api.txt";
 const AUTOCMD_PATH = "/doc/autocmd.txt";
 const POPUP_PATH = "/doc/popup.txt";
 const CHANNEL_PATH = "/doc/channel.txt";
@@ -67,7 +67,7 @@ class Server {
         EVAL_PATH,
         OPTIONS_PATH,
         INDEX_PATH,
-        API_PATH,
+        // API_PATH,
         AUTOCMD_PATH,
         POPUP_PATH,
         CHANNEL_PATH,
@@ -95,7 +95,7 @@ class Server {
       this.resolveBuiltinVimTextpropFunctionsDocument();
       this.resolveBuiltinVimTerminalFunctionsDocument();
       this.resolveBuiltinVimTestingFunctionsDocument();
-      this.resolveBuiltinNvimFunctions();
+      // this.resolveBuiltinNvimFunctions();
       this.resolveExpandKeywords();
       this.resolveVimCommands();
       this.resolveVimFeatures();
@@ -514,60 +514,60 @@ class Server {
     }
   }
 
-  private resolveBuiltinNvimFunctions() {
-    const evalText = this.text[API_PATH] || [];
-    let completionItem: CompletionItem;
-    const pattern = /^((nvim_\w+)\(([^)]*)\))[ \t]*/m;
-    for (let idx = 0; idx < evalText.length; idx++) {
-      const line = evalText[idx];
-      let m = line.match(pattern);
-      if (!m && evalText[idx + 1]) {
-        m = [line, evalText[idx + 1].trim()].join(" ").match(pattern);
-        if (m) {
-          idx++;
-        }
-      }
-      if (m) {
-        if (completionItem) {
-          this.vimBuiltinFunctionItems.push(
-            completionItem,
-          );
-          if (this.vimBuiltFunctionDocuments[completionItem.label]) {
-            this.vimBuiltFunctionDocuments[completionItem.label].pop();
-          }
-        }
-        const label = m[2];
-        completionItem = {
-          label,
-          kind: CompletionItemKind.Function,
-          detail: "",
-          documentation: "",
-          sortText: "00004",
-          insertText: this.formatFunctionSnippets(m[2], m[3]),
-          insertTextFormat: InsertTextFormat.Snippet,
-        };
-        if (!this.vimBuiltFunctionDocuments[label]) {
-          this.vimBuiltFunctionDocuments[label] = [];
-        }
-        this.vimBuiltFunctionSignatureHelp[label] = [
-          m[3],
-          "",
-        ];
-      } else if (/^(================|[ \t]*vim:tw=78:ts=8:ft=help:norl:)/.test(line)) {
-        if (completionItem) {
-          this.vimBuiltinFunctionItems.push(
-            completionItem,
-          );
-          if (this.vimBuiltFunctionDocuments[completionItem.label]) {
-            this.vimBuiltFunctionDocuments[completionItem.label].pop();
-          }
-          completionItem = undefined;
-        }
-      } else if (completionItem && !/^[ \t]\*nvim(_\w+)+\(\)\*\s*$/.test(line)) {
-        this.vimBuiltFunctionDocuments[completionItem.label].push(line);
-      }
-    }
-  }
+  // private resolveBuiltinNvimFunctions() {
+  //   const evalText = this.text[API_PATH] || [];
+  //   let completionItem: CompletionItem;
+  //   const pattern = /^((nvim_\w+)\(([^)]*)\))[ \t]*/m;
+  //   for (let idx = 0; idx < evalText.length; idx++) {
+  //     const line = evalText[idx];
+  //     let m = line.match(pattern);
+  //     if (!m && evalText[idx + 1]) {
+  //       m = [line, evalText[idx + 1].trim()].join(" ").match(pattern);
+  //       if (m) {
+  //         idx++;
+  //       }
+  //     }
+  //     if (m) {
+  //       if (completionItem) {
+  //         this.vimBuiltinFunctionItems.push(
+  //           completionItem,
+  //         );
+  //         if (this.vimBuiltFunctionDocuments[completionItem.label]) {
+  //           this.vimBuiltFunctionDocuments[completionItem.label].pop();
+  //         }
+  //       }
+  //       const label = m[2];
+  //       completionItem = {
+  //         label,
+  //         kind: CompletionItemKind.Function,
+  //         detail: "",
+  //         documentation: "",
+  //         sortText: "00004",
+  //         insertText: this.formatFunctionSnippets(m[2], m[3]),
+  //         insertTextFormat: InsertTextFormat.Snippet,
+  //       };
+  //       if (!this.vimBuiltFunctionDocuments[label]) {
+  //         this.vimBuiltFunctionDocuments[label] = [];
+  //       }
+  //       this.vimBuiltFunctionSignatureHelp[label] = [
+  //         m[3],
+  //         "",
+  //       ];
+  //     } else if (/^(================|[ \t]*vim:tw=78:ts=8:ft=help:norl:)/.test(line)) {
+  //       if (completionItem) {
+  //         this.vimBuiltinFunctionItems.push(
+  //           completionItem,
+  //         );
+  //         if (this.vimBuiltFunctionDocuments[completionItem.label]) {
+  //           this.vimBuiltFunctionDocuments[completionItem.label].pop();
+  //         }
+  //         completionItem = undefined;
+  //       }
+  //     } else if (completionItem && !/^[ \t]\*nvim(_\w+)+\(\)\*\s*$/.test(line)) {
+  //       this.vimBuiltFunctionDocuments[completionItem.label].push(line);
+  //     }
+  //   }
+  // }
 
   private resolveVimCommands() {
     const indexText = this.text[INDEX_PATH] || [];
