@@ -24,6 +24,7 @@ interface IConfig {
 }
 
 const EVAL_PATH = "/doc/eval.txt";
+const BUILTIN_PATH = "/doc/builtin.txt";
 const OPTIONS_PATH = "/doc/options.txt";
 const INDEX_PATH = "/doc/index.txt";
 // const API_PATH = "/doc/api.txt";
@@ -65,6 +66,7 @@ class Server {
     if (vimruntime) {
       const paths = [
         EVAL_PATH,
+        BUILTIN_PATH,
         OPTIONS_PATH,
         INDEX_PATH,
         // API_PATH,
@@ -229,12 +231,12 @@ class Server {
 
   // get vim builtin function from document eval.txt
   private resolveBuiltinFunctions() {
-    const evalText = this.text[EVAL_PATH] || [];
+    const builtinText = this.text[BUILTIN_PATH] || [];
     let isMatchLine = false;
     let completionItem: CompletionItem;
-    for (const line of evalText) {
+    for (const line of builtinText) {
       if (!isMatchLine) {
-        if (/\*functions\*/.test(line)) {
+        if (/\*builtin-function-list\*/.test(line)) {
           isMatchLine = true;
         }
         continue;
@@ -276,15 +278,13 @@ class Server {
   }
 
   private resolveBuiltinFunctionsDocument() {
-    const evalText = this.text[EVAL_PATH] || [];
+    const builtinText = this.text[BUILTIN_PATH] || [];
     let isMatchLine = false;
     let label: string = "";
-    for (let idx = 0; idx < evalText.length; idx++) {
-      const line = evalText[idx];
+    for (const line of builtinText) {
       if (!isMatchLine) {
-        if (/\*abs\(\)\*/.test(line)) {
+        if (/\*builtin-function-details\*/.test(line)) {
           isMatchLine = true;
-          idx -= 1;
         }
         continue;
       } else {
@@ -297,7 +297,7 @@ class Server {
           if (!this.vimBuiltFunctionDocuments[label]) {
             this.vimBuiltFunctionDocuments[label] = [];
           }
-        } else if (/^[ \t]*\*string-match\*[ \t]*$/.test(line)) {
+        } else if (/^[ \t]*\*feature-list\*[ \t]*$/.test(line)) {
           if (label) {
             this.vimBuiltFunctionDocuments[label].pop();
           }
