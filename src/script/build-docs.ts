@@ -631,7 +631,7 @@ class Server {
         }
         continue;
       } else {
-        const m = line.match(/^[ \t]*\*?([^ \t]+?)\*?[ \t]+([^ \t].*)$/);
+        const m = line.match(/^([^ \t]+?)\*?[ \t]+([^ \t].*)$/);
         if (m) {
           if (completionItem) {
             features.push(completionItem);
