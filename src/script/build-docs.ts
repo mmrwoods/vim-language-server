@@ -618,7 +618,7 @@ class Server {
   }
 
   private resolveVimFeatures() {
-    const text = this.text[EVAL_PATH] || [];
+    const text = this.text[BUILTIN_PATH] || [];
     let isMatchLine = false;
     let completionItem: CompletionItem;
     const features: CompletionItem[] = [];
