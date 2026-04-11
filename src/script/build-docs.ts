@@ -10,6 +10,7 @@
  */
 import { readFile, writeFileSync } from "fs";
 import { join } from "path";
+import fs from "fs";
 
 import {
   CompletionItem,
@@ -21,19 +22,22 @@ import { pcb } from "../common/util";
 
 interface IConfig {
   vimruntime: string;
+  isNeovim: boolean;
 }
 
 const EVAL_PATH = "/doc/eval.txt";
 const BUILTIN_PATH = "/doc/builtin.txt";
 const OPTIONS_PATH = "/doc/options.txt";
 const INDEX_PATH = "/doc/index.txt";
-// const API_PATH = "/doc/api.txt";
 const AUTOCMD_PATH = "/doc/autocmd.txt";
 const POPUP_PATH = "/doc/popup.txt";
 const CHANNEL_PATH = "/doc/channel.txt";
 const TEXTPROP_PATH = "/doc/textprop.txt";
 const TERMINAL_PATH = "/doc/terminal.txt";
 const TESTING_PATH = "/doc/testing.txt";
+const NVIM_API_PATH = "/doc/api.txt";
+const NVIM_EVAL_PATH = "/doc/vimeval.txt";
+const NVIM_BUILTIN_PATH = "/doc/vimfn.txt";
 
 class Server {
 
@@ -63,20 +67,32 @@ class Server {
 
   public async build() {
     const { vimruntime } = this.config;
+    const { isNeovim } = this.config;
     if (vimruntime) {
-      const paths = [
-        EVAL_PATH,
-        BUILTIN_PATH,
-        OPTIONS_PATH,
-        INDEX_PATH,
-        // API_PATH,
-        AUTOCMD_PATH,
-        POPUP_PATH,
-        CHANNEL_PATH,
-        TEXTPROP_PATH,
-        TERMINAL_PATH,
-        TESTING_PATH,
-      ];
+      let paths: string[];
+      if (isNeovim) {
+        paths = [
+          NVIM_EVAL_PATH,
+          NVIM_BUILTIN_PATH,
+          NVIM_API_PATH,
+          OPTIONS_PATH,
+          INDEX_PATH,
+          AUTOCMD_PATH,
+        ];
+      } else {
+        paths = [
+          EVAL_PATH,
+          BUILTIN_PATH,
+          OPTIONS_PATH,
+          INDEX_PATH,
+          AUTOCMD_PATH,
+          POPUP_PATH,
+          CHANNEL_PATH,
+          TEXTPROP_PATH,
+          TERMINAL_PATH,
+          TESTING_PATH,
+        ];
+      }
       // tslint:disable-next-line: prefer-for-of
       for (let index = 0; index < paths.length; index++) {
         const p = join(vimruntime, paths[index]);
@@ -91,13 +107,16 @@ class Server {
       this.resolveVimOptions();
       this.resolveBuiltinFunctions();
       this.resolveBuiltinFunctionsDocument();
-      this.resolveBuiltinVimPopupFunctionsDocument();
-      this.resolveBuiltinVimChannelFunctionsDocument();
-      this.resolveBuiltinVimJobFunctionsDocument();
-      this.resolveBuiltinVimTextpropFunctionsDocument();
-      this.resolveBuiltinVimTerminalFunctionsDocument();
-      this.resolveBuiltinVimTestingFunctionsDocument();
-      // this.resolveBuiltinNvimFunctions();
+      if ( isNeovim ) {
+        this.resolveBuiltinNvimFunctions();
+      } else {
+        this.resolveBuiltinVimPopupFunctionsDocument();
+        this.resolveBuiltinVimChannelFunctionsDocument();
+        this.resolveBuiltinVimJobFunctionsDocument();
+        this.resolveBuiltinVimTextpropFunctionsDocument();
+        this.resolveBuiltinVimTerminalFunctionsDocument();
+        this.resolveBuiltinVimTestingFunctionsDocument();
+      }
       this.resolveExpandKeywords();
       this.resolveVimCommands();
       this.resolveVimFeatures();
@@ -145,10 +164,11 @@ class Server {
 
   // get vim predefined variables from vim document eval.txt
   private resolveVimPredefinedVariables() {
-    const evalText = this.text[EVAL_PATH] || [];
+    const path = this.config.isNeovim ? NVIM_EVAL_PATH : EVAL_PATH
+    const text = this.text[path] || [];
     let isMatchLine = false;
     let completionItem: CompletionItem;
-    for (const line of evalText) {
+    for (const line of text) {
       if (!isMatchLine) {
         if (/\*vim-variable\*/.test(line)) {
           isMatchLine = true;
@@ -231,10 +251,11 @@ class Server {
 
   // get vim builtin function from document eval.txt
   private resolveBuiltinFunctions() {
-    const builtinText = this.text[BUILTIN_PATH] || [];
+    const path = this.config.isNeovim ? NVIM_BUILTIN_PATH : BUILTIN_PATH
+    const text = this.text[path] || [];
     let isMatchLine = false;
     let completionItem: CompletionItem;
-    for (const line of builtinText) {
+    for (const line of text) {
       if (!isMatchLine) {
         if (/\*builtin-function-list\*/.test(line)) {
           isMatchLine = true;
@@ -278,10 +299,11 @@ class Server {
   }
 
   private resolveBuiltinFunctionsDocument() {
-    const builtinText = this.text[BUILTIN_PATH] || [];
+    const path = this.config.isNeovim ? NVIM_BUILTIN_PATH : BUILTIN_PATH
+    const text = this.text[path] || [];
     let isMatchLine = false;
     let label: string = "";
-    for (const line of builtinText) {
+    for (const line of text) {
       if (!isMatchLine) {
         if (/\*builtin-function-details\*/.test(line)) {
           isMatchLine = true;
@@ -514,60 +536,60 @@ class Server {
     }
   }
 
-  // private resolveBuiltinNvimFunctions() {
-  //   const evalText = this.text[API_PATH] || [];
-  //   let completionItem: CompletionItem;
-  //   const pattern = /^((nvim_\w+)\(([^)]*)\))[ \t]*/m;
-  //   for (let idx = 0; idx < evalText.length; idx++) {
-  //     const line = evalText[idx];
-  //     let m = line.match(pattern);
-  //     if (!m && evalText[idx + 1]) {
-  //       m = [line, evalText[idx + 1].trim()].join(" ").match(pattern);
-  //       if (m) {
-  //         idx++;
-  //       }
-  //     }
-  //     if (m) {
-  //       if (completionItem) {
-  //         this.vimBuiltinFunctionItems.push(
-  //           completionItem,
-  //         );
-  //         if (this.vimBuiltFunctionDocuments[completionItem.label]) {
-  //           this.vimBuiltFunctionDocuments[completionItem.label].pop();
-  //         }
-  //       }
-  //       const label = m[2];
-  //       completionItem = {
-  //         label,
-  //         kind: CompletionItemKind.Function,
-  //         detail: "",
-  //         documentation: "",
-  //         sortText: "00004",
-  //         insertText: this.formatFunctionSnippets(m[2], m[3]),
-  //         insertTextFormat: InsertTextFormat.Snippet,
-  //       };
-  //       if (!this.vimBuiltFunctionDocuments[label]) {
-  //         this.vimBuiltFunctionDocuments[label] = [];
-  //       }
-  //       this.vimBuiltFunctionSignatureHelp[label] = [
-  //         m[3],
-  //         "",
-  //       ];
-  //     } else if (/^(================|[ \t]*vim:tw=78:ts=8:ft=help:norl:)/.test(line)) {
-  //       if (completionItem) {
-  //         this.vimBuiltinFunctionItems.push(
-  //           completionItem,
-  //         );
-  //         if (this.vimBuiltFunctionDocuments[completionItem.label]) {
-  //           this.vimBuiltFunctionDocuments[completionItem.label].pop();
-  //         }
-  //         completionItem = undefined;
-  //       }
-  //     } else if (completionItem && !/^[ \t]\*nvim(_\w+)+\(\)\*\s*$/.test(line)) {
-  //       this.vimBuiltFunctionDocuments[completionItem.label].push(line);
-  //     }
-  //   }
-  // }
+  private resolveBuiltinNvimFunctions() {
+    const evalText = this.text[NVIM_API_PATH] || [];
+    let completionItem: CompletionItem;
+    const pattern = /^((nvim_\w+)\(([^)]*)\))[ \t]*/m;
+    for (let idx = 0; idx < evalText.length; idx++) {
+      const line = evalText[idx];
+      let m = line.match(pattern);
+      if (!m && evalText[idx + 1]) {
+        m = [line, evalText[idx + 1].trim()].join(" ").match(pattern);
+        if (m) {
+          idx++;
+        }
+      }
+      if (m) {
+        if (completionItem) {
+          this.vimBuiltinFunctionItems.push(
+            completionItem,
+          );
+          if (this.vimBuiltFunctionDocuments[completionItem.label]) {
+            this.vimBuiltFunctionDocuments[completionItem.label].pop();
+          }
+        }
+        const label = m[2];
+        completionItem = {
+          label,
+          kind: CompletionItemKind.Function,
+          detail: "",
+          documentation: "",
+          sortText: "00004",
+          insertText: this.formatFunctionSnippets(m[2], m[3]),
+          insertTextFormat: InsertTextFormat.Snippet,
+        };
+        if (!this.vimBuiltFunctionDocuments[label]) {
+          this.vimBuiltFunctionDocuments[label] = [];
+        }
+        this.vimBuiltFunctionSignatureHelp[label] = [
+          m[3],
+          "",
+        ];
+      } else if (/^(================|[ \t]*vim:tw=78:ts=8:ft=help:norl:)/.test(line)) {
+        if (completionItem) {
+          this.vimBuiltinFunctionItems.push(
+            completionItem,
+          );
+          if (this.vimBuiltFunctionDocuments[completionItem.label]) {
+            this.vimBuiltFunctionDocuments[completionItem.label].pop();
+          }
+          completionItem = undefined;
+        }
+      } else if (completionItem && !/^[ \t]\*nvim(_\w+)+\(\)\*\s*$/.test(line)) {
+        this.vimBuiltFunctionDocuments[completionItem.label].push(line);
+      }
+    }
+  }
 
   private resolveVimCommands() {
     const indexText = this.text[INDEX_PATH] || [];
@@ -618,7 +640,8 @@ class Server {
   }
 
   private resolveVimFeatures() {
-    const text = this.text[BUILTIN_PATH] || [];
+    const path = this.config.isNeovim ? NVIM_BUILTIN_PATH : BUILTIN_PATH
+    const text = this.text[path] || [];
     let isMatchLine = false;
     let completionItem: CompletionItem;
     const features: CompletionItem[] = [];
@@ -725,11 +748,13 @@ class Server {
 
 async function main() {
   const servers: Server[] = [];
+  let vimruntime: string;
+  let isNeovim: boolean;
   for (let idx = 2; idx < process.argv.length; idx++) {
+    vimruntime = process.argv[idx];
+    isNeovim = fs.existsSync(join(vimruntime, 'doc/nvim.txt'));
     servers.push(
-      new Server({
-        vimruntime: process.argv[idx],
-      }),
+      new Server({ vimruntime, isNeovim }),
     );
     await servers[servers.length - 1].build();
   }
